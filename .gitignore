@@ -1,0 +1,26 @@
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDEs and editors
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Dependency directories
+node_modules/
+vendor/
+
+# Environment variables
+.env
+
+# Build directories
+build/
+dist/
+
+# Temporary files
+*.tmp
+*.swp
+*.bak
+*.old
