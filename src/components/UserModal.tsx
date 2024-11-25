@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { useFormValidation } from '../hooks'
 import { Button, Input, TextArea } from '.'
 import { userType } from '../types'
 import { FaCircleXmark, FaRegTrashCan } from 'react-icons/fa6'
@@ -28,13 +29,9 @@ export const UserModal = ({
     website: userSelected.website,
     avatar: userSelected.avatar,
     description: userSelected.description,
+    createdAt: userSelected.createdAt,
   })
-  const [errors, setErrors] = useState({
-    name: '',
-    website: '',
-    avatar: '',
-    description: '',
-  })
+  const { errors, validateForm } = useFormValidation(userDetails)
 
   useEffect(() => {
     setUserDetails({
@@ -43,60 +40,34 @@ export const UserModal = ({
       website: userSelected.website,
       avatar: userSelected.avatar,
       description: userSelected.description,
+      createdAt: userSelected.createdAt,
     })
   }, [userSelected])
 
-  const handleChange = (
-    propName: string,
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    setUserDetails((prevDetails) => ({
-      ...prevDetails,
-      [propName]: e.target.value,
-    }))
-    setHasChanged(true)
-  }
+  const handleChange = useCallback(
+    (propName: string, e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      setUserDetails((prevDetails) => ({
+        ...prevDetails,
+        [propName]: e.target.value,
+      }))
+      setHasChanged(true)
+    },
+    [],
+  )
 
-  const validateForm = () => {
-    const newErrors = {
-      name: '',
-      website: '',
-      avatar: '',
-      description: '',
-    }
-    let isValid = true
-
-    if (!userDetails.name) {
-      newErrors.name = 'Name is required'
-      isValid = false
-    }
-    if (!userDetails.website) {
-      newErrors.website = 'Website is required'
-      isValid = false
-    }
-    if (!userDetails.avatar) {
-      newErrors.avatar = 'Avatar URL is required'
-      isValid = false
-    }
-    if (!userDetails.description) {
-      newErrors.description = 'Description is required'
-      isValid = false
-    }
-
-    setErrors(newErrors)
-    return isValid
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (validateForm()) {
-      if (isNewUser) {
-        addUser({ ...userDetails, id: uuidv4(), createdAt: new Date().toISOString() })
-      } else {
-        updateUser({ ...userSelected, ...userDetails })
+  const handleSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault()
+      if (validateForm()) {
+        if (isNewUser) {
+          addUser({ ...userDetails, id: uuidv4(), createdAt: new Date().toISOString() })
+        } else {
+          updateUser({ ...userSelected, ...userDetails })
+        }
       }
-    }
-  }
+    },
+    [userDetails, userSelected, isNewUser, validateForm, addUser, updateUser],
+  )
 
   return (
     <>

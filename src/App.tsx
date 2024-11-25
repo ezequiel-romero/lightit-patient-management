@@ -1,81 +1,79 @@
-import { useState } from 'react'
+import { useCallback, useMemo } from 'react'
 import Modal from 'react-modal'
-import { Header, Main, Card } from './components'
-import './App.css'
-import { userType } from './types'
-import { UserModal } from './components/UserModal'
 import toast, { Toaster } from 'react-hot-toast'
 import { FaCirclePlus } from 'react-icons/fa6'
-import { Loader } from './components/Loader'
-import { useFetchUsers } from './hooks/useFetchUsers'
+import { userType } from './types'
+import { Header, Main, Card, UserModal, Loader } from './components'
+import { useFetchUsers, useModal } from './hooks'
+import './App.css'
 
 Modal.setAppElement('#root')
 
 function App() {
-  const { data, setData, isLoading } = useFetchUsers()
-  const [modalIsOpen, setIsOpen] = useState(false)
-  const [userSelected, setUserSelected] = useState<userType | undefined>(undefined)
-  const [isNewUser, setIsNewUser] = useState(false)
-  function openModal(userId?: string) {
-    if (!userId) {
-      setUserSelected({
-        id: '',
-        name: '',
-        website: '',
-        avatar: '',
-        description: '',
-        createdAt: '',
-      })
-      setIsNewUser(true)
-      setIsOpen(true)
-    } else {
-      const newUserSelected = data.find((user) => user.id === userId)
-      setUserSelected(newUserSelected)
-      setIsNewUser(false)
-      setIsOpen(true)
-    }
-  }
+  const { data, setData, isLoading, error } = useFetchUsers()
+  const { modalIsOpen, userSelected, isNewUser, openModal, closeModal } = useModal()
 
-  function closeModal() {
-    setIsOpen(false)
-  }
+  const updateUser = useCallback(
+    (updatedUser: userType) => {
+      setData((prevData) =>
+        prevData.map((user) => (user.id === updatedUser.id ? updatedUser : user)),
+      )
+      closeModal()
+      toast.success('User updated successfully!')
+    },
+    [setData, closeModal],
+  )
 
-  function updateUser(updatedUser: userType) {
-    setData((prevData) => prevData.map((user) => (user.id === updatedUser.id ? updatedUser : user)))
-    closeModal()
-    toast.success('User updated successfully!')
-  }
+  const deleteUser = useCallback(
+    (userId: string) => {
+      setData((prevData) => prevData.filter((user) => user.id !== userId))
+      closeModal()
+      toast.success('User deleted successfully!')
+    },
+    [setData, closeModal],
+  )
 
-  function deleteUser(userId: string) {
-    setData((prevData) => prevData.filter((user) => user.id !== userId))
-    closeModal()
-    toast.success('User deleted successfully!')
-  }
+  const addUser = useCallback(
+    (newUser: userType) => {
+      setData((prevData) => [...prevData, newUser])
+      closeModal()
+      toast.success('User added successfully!')
+    },
+    [setData, closeModal],
+  )
 
-  function addUser(newUser: userType) {
-    setData((prevData) => [...prevData, newUser])
-    closeModal()
-    toast.success('User added successfully!')
-  }
+  const handleOpenModal = useCallback(
+    (userId?: string) => {
+      openModal(userId, data)
+    },
+    [openModal, data],
+  )
+
+  const userCards = useMemo(
+    () =>
+      data.map((user) => (
+        <Card key={user.id} user={user} openModal={() => handleOpenModal(user.id)} />
+      )),
+    [data, handleOpenModal],
+  )
 
   return (
     <>
       <Header />
+
       <Main>
         <div className="pageHeader">
           <h2>Users</h2>
-          <button onClick={() => openModal()}>
+          <button onClick={() => handleOpenModal()}>
             <FaCirclePlus size={30} />
           </button>
         </div>
         {isLoading ? (
           <Loader />
+        ) : error ? (
+          <div className="error">Error fetching data.</div>
         ) : (
-          <div className="usersContainer">
-            {data.map((user) => {
-              return <Card key={user.id} user={user} openModal={() => openModal(user.id)} />
-            })}
-          </div>
+          <div className="usersContainer">{userCards}</div>
         )}
       </Main>
 
