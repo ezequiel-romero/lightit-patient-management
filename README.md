@@ -46,3 +46,6 @@ The code is divided into multiple files and hooks to ensure modularity, readabil
 - **useFetchUsers**: A custom hook for fetching user data from the API.
 - **useModal**: A custom hook for managing the state of the modal.
 - **useFormValidation**: A custom hook for validating form data.
+
+### Development Data
+The `mock/data.json` file was used only for development purposes to avoid extra fetching to the API. This approach ensures that the application can be developed and tested without relying on the availability of the external API.
